@@ -95,32 +95,32 @@ public class SyncJobQueryRepositoryImpl implements SyncJobQueryRepository {
       Long idAfter,
       String cursor
     ) {
-    if (idAfter == null || !hasText(cursor)) {
-      return null;
-    }
+        if (idAfter == null || !hasText(cursor)) {
+          return null;
+        }
 
-    if (sortField == TARGET_DATE) {
-        LocalDate cursorDate;
+        if (sortField == TARGET_DATE) {
+            LocalDate cursorDate;
+            try {
+                cursorDate = LocalDate.parse(cursor);
+            } catch (Exception e) {
+                throw new IllegalArgumentException("invalid cursor: " + cursor);
+            }
+            DateExpression<LocalDate> f = syncJob.targetDate;
+            return asc
+                ? f.gt(cursorDate).or(f.eq(cursorDate).and(syncJob.id.gt(idAfter)))
+                : f.lt(cursorDate).or(f.eq(cursorDate).and(syncJob.id.lt(idAfter)));
+        }
+        LocalDateTime cursorTime;
         try {
-            cursorDate = LocalDate.parse(cursor);
+            cursorTime = LocalDateTime.parse(cursor);
         } catch (Exception e) {
             throw new IllegalArgumentException("invalid cursor: " + cursor);
         }
-        DateExpression<LocalDate> f = syncJob.targetDate;
+        DateTimeExpression<LocalDateTime> f = syncJob.jobTime;
         return asc
-            ? f.gt(cursorDate).or(f.eq(cursorDate).and(syncJob.id.gt(idAfter)))
-            : f.lt(cursorDate).or(f.eq(cursorDate).and(syncJob.id.lt(idAfter)));
-    }
-    LocalDateTime cursorTime;
-    try {
-        cursorTime = LocalDateTime.parse(cursor);
-    } catch (Exception e) {
-        throw new IllegalArgumentException("invalid cursor: " + cursor);
-    }
-    DateTimeExpression<LocalDateTime> f = syncJob.jobTime;
-    return asc
-        ? f.gt(cursorTime).or(f.eq(cursorTime).and(syncJob.id.gt(idAfter)))
-        : f.lt(cursorTime).or(f.eq(cursorTime).and(syncJob.id.lt(idAfter)));
+            ? f.gt(cursorTime).or(f.eq(cursorTime).and(syncJob.id.gt(idAfter)))
+            : f.lt(cursorTime).or(f.eq(cursorTime).and(syncJob.id.lt(idAfter)));
     }
 
     private OrderSpecifier<?>[] buildOrderSpecifiers(SyncJobSortField sortField, boolean asc) {
